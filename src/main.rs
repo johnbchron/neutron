@@ -1,42 +1,100 @@
-mod node_material;
+mod box_material;
+mod camera;
+mod curve_material;
+mod style;
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{
+  prelude::*,
+  render::view::NoFrustumCulling,
+  sprite::{Anchor, MaterialMesh2dBundle},
+  text::Text2dBounds,
+  window::{WindowMode, WindowResolution},
+};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use curve_material::CurveMaterial;
 
-use crate::node_material::NodeMaterial;
+use crate::{box_material::BoxMaterial, style::ThemeColor};
+
+const NODE_TEXT_PADDING: f32 = 16.0;
 
 fn main() {
   App::new()
-    .add_plugins((
-      DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-          present_mode: bevy::window::PresentMode::AutoNoVsync,
-          ..default()
-        }),
+    .insert_resource(ClearColor(ThemeColor::Background.color()))
+    .add_plugins(DefaultPlugins.set(WindowPlugin {
+      primary_window: Some(Window {
+        resolution: WindowResolution::default().with_scale_factor_override(2.0),
+        mode: WindowMode::BorderlessFullscreen,
         ..default()
       }),
-      node_material::NodeMaterialPlugin,
+      ..default()
+    }))
+    .add_plugins((
+      box_material::BoxMaterialPlugin,
+      curve_material::CurveMaterialPlugin,
+      camera::CameraPlugin,
       WorldInspectorPlugin::new(),
     ))
-    .add_systems(Startup, setup)
+    .add_systems(Startup, setup_test_curve)
     .run();
 }
 
-fn setup(
+fn setup_test_node(
   mut commands: Commands,
   mut meshes: ResMut<Assets<Mesh>>,
-  mut materials: ResMut<Assets<NodeMaterial>>,
+  mut materials: ResMut<Assets<BoxMaterial>>,
+  asset_server: Res<AssetServer>,
 ) {
-  commands.spawn(Camera2dBundle::default());
-  commands.spawn(MaterialMesh2dBundle {
-    mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-    transform: Transform::default().with_scale(Vec3::new(150.0, 100.0, 1.0)),
-    material: materials.add(NodeMaterial {
-      color:        Color::PURPLE,
-      bounds:       Vec2::new(150.0, 100.0),
-      border_width: 4.0,
-      radius:       10.0,
-    }),
-    ..default()
-  });
+  commands
+    .spawn((
+      MaterialMesh2dBundle {
+        mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+        transform: Transform::default(),
+        material: materials.add(BoxMaterial::default()),
+        ..default()
+      },
+      NoFrustumCulling,
+    ))
+    .with_children(|parent| {
+      let font = asset_server.load("fonts/FiraMono-Medium.ttf");
+      let text_style = TextStyle {
+        font:      font.clone(),
+        font_size: 36.0,
+        color:     ThemeColor::Text.color(),
+      };
+      let text_alignment = TextAlignment::Left;
+      parent.spawn(Text2dBundle {
+        text: Text::from_section("Test Node Title", text_style.clone())
+          .with_alignment(text_alignment),
+        text_anchor: Anchor::TopLeft,
+        text_2d_bounds: Text2dBounds {
+          size: Vec2::new(
+            320.0 - NODE_TEXT_PADDING * 2.0,
+            240.0 - NODE_TEXT_PADDING * 2.0,
+          ),
+          ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(
+          -160.0 + NODE_TEXT_PADDING,
+          120.0 - NODE_TEXT_PADDING,
+          0.0,
+        )),
+        ..default()
+      });
+    });
+}
+
+fn setup_test_curve(
+  mut commands: Commands,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut materials: ResMut<Assets<CurveMaterial>>,
+) {
+  commands.spawn((
+    MaterialMesh2dBundle {
+      mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+      transform: Transform::default().with_scale(Vec3::new(360.0, 280.0, 1.0)),
+      material: materials.add(CurveMaterial::default()),
+      ..default()
+    },
+    NoFrustumCulling,
+  ));
 }
