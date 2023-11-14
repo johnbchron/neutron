@@ -4,9 +4,10 @@
   mesh2d_view_bindings::view,
 }
 
-#import "shaders/sdfs.wgsl"::cubic_bezier_sdf
+#import "shaders/cubic_bezier_sdf.wgsl"::cubic_bezier_sdf
 
 struct Vertex {
+  @builtin(vertex_index) vertex_index: u32,
   @builtin(instance_index) instance_index: u32,
   @location(0) position: vec3<f32>,
   @location(1) normal: vec3<f32>,
@@ -31,6 +32,36 @@ struct CurveMaterial {
 
 @group(1) @binding(0) var<uniform> material: CurveMaterial;
 
+@vertex
+fn vertex(
+  in: Vertex
+) -> VertexOutput {
+  var out: VertexOutput;
+  out.uv = in.uv;
+
+  var model = mesh_functions::get_model_matrix(in.instance_index);
+
+  let aabb_min = min(min(material.point_a, material.point_b), min(material.point_c, material.point_d)) - (material.width * 2.0);
+  let aabb_max = max(max(material.point_a, material.point_b), max(material.point_c, material.point_d)) + (material.width * 2.0);
+  var aabb_vertices = array<vec3<f32>, 4>(
+    vec3(aabb_min, in.position.z),
+    vec3(aabb_min.x, aabb_max.y, in.position.z),
+    vec3(aabb_max, in.position.z),
+    vec3(aabb_max.x, aabb_min.y, in.position.z),
+  );
+  let vertex_position = aabb_vertices[in.vertex_index];
+
+  // out.world_position = mesh_functions::mesh2d_position_local_to_world(
+  //   model,
+  //   vec4<f32>(vertex_position, 1.0)
+  // );
+  out.world_position = vec4(vertex_position, 1.0);
+  out.position = mesh_functions::mesh2d_position_world_to_clip(out.world_position);
+  out.world_normal = mesh_functions::mesh2d_normal_local_to_world(in.normal, in.instance_index);
+
+  return out;
+}
+
 @fragment
 fn fragment(
   in: VertexOutput,
@@ -48,7 +79,7 @@ fn fragment(
   return mix(
     material.color,
     vec4(material.color.xyz, 0.0),
-    smoothstep(0.0, 0.5, distance)
+    smoothstep(0.0, 0.0, distance)
   );
 }
 

@@ -39,7 +39,7 @@ fn vertex(
   out.uv = in.uv;
 
   var model = mesh_functions::get_model_matrix(in.instance_index);
-  let vertex_position = in.position * vec3(material.size, 1.0);
+  let vertex_position = in.position * vec3(material.size + material.border_width * 2.0, in.position.z);
 
   out.vertex_position = vertex_position;
   out.world_position = mesh_functions::mesh2d_position_local_to_world(
@@ -59,9 +59,9 @@ fn fragment(
   let p = in.vertex_position.xy;
   let distance = round_box_sdf(material.size / 2.0, material.radius, p);
 
-  if distance < -material.border_width {
+  if distance < 0.0 {
     return material.color;
-  } else if distance >= -material.border_width && distance <= 0.0 {
+  } else if distance < material.border_width {
     return material.border_color;
   } else {
     return vec4(0.0);

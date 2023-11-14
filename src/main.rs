@@ -34,7 +34,7 @@ fn main() {
       camera::CameraPlugin,
       WorldInspectorPlugin::new(),
     ))
-    .add_systems(Startup, setup_test_curve)
+    .add_systems(Startup, (setup_test_node, setup_test_curve))
     .run();
 }
 
@@ -48,7 +48,7 @@ fn setup_test_node(
     .spawn((
       MaterialMesh2dBundle {
         mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-        transform: Transform::default(),
+        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
         material: materials.add(BoxMaterial::default()),
         ..default()
       },
@@ -91,8 +91,14 @@ fn setup_test_curve(
   commands.spawn((
     MaterialMesh2dBundle {
       mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
-      transform: Transform::default().with_scale(Vec3::new(360.0, 280.0, 1.0)),
-      material: materials.add(CurveMaterial::default()),
+      transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+      material: materials.add(CurveMaterial {
+        point_a: Vec2::new(160.0, 0.0),
+        point_b: Vec2::new(200.0, 0.0),
+        point_c: Vec2::new(200.0, 40.0),
+        point_d: Vec2::new(240.0, 40.0),
+        ..default()
+      }),
       ..default()
     },
     NoFrustumCulling,

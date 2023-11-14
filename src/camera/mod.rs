@@ -34,7 +34,12 @@ enum MousePanning {
 }
 
 fn pan_camera_on_drag(
-  mut camera_q: Query<(&Camera, &mut Transform, &GlobalTransform)>,
+  mut camera_q: Query<(
+    &Camera,
+    &mut Transform,
+    &GlobalTransform,
+    &OrthographicProjection,
+  )>,
   mouse_button_input: Res<Input<MouseButton>>,
   window_q: Query<&Window, With<PrimaryWindow>>,
   mut last_mouse_position: Local<MousePanning>,
@@ -44,7 +49,8 @@ fn pan_camera_on_drag(
   let Some(screenspace_position) = window_q.single().cursor_position() else {
     return;
   };
-  let (camera, mut transform, global_transform) = camera_q.single_mut();
+  let (camera, mut transform, global_transform, projection) =
+    camera_q.single_mut();
   let Some(worldspace_position) =
     camera.viewport_to_world_2d(global_transform, screenspace_position)
   else {
@@ -59,12 +65,15 @@ fn pan_camera_on_drag(
       }
     }
     MousePanning::Tethered(tethered_point) => {
-      // update the camera position
       if mouse_button_input.pressed(MouseButton::Left) {
         let delta = worldspace_position - tethered_point;
         transform.translation -= delta.extend(0.0);
-        gizmos.circle_2d(worldspace_position, 10., Color::WHITE);
-      // stop panning
+
+        gizmos.circle_2d(
+          worldspace_position,
+          10.0 * projection.scale,
+          Color::WHITE,
+        );
       } else {
         *last_mouse_position = MousePanning::None;
       }

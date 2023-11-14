@@ -4,9 +4,10 @@
     naersk.url = "github:nix-community/naersk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    wgsl-analyzer.url = "github:wgsl-analyzer/wgsl-analyzer";
   };
 
-  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay }:
+  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay, wgsl-analyzer }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
@@ -19,6 +20,7 @@
         };
         
         rust_deps = [ toolchain pkgs.lldb pkgs.bacon ];
+        wgsl_deps = [ wgsl-analyzer.packages.${system}.default ];
         bevy_build_deps = with pkgs; [
           pkg-config
           mold clang

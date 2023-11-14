@@ -30,7 +30,7 @@ impl Default for CurveMaterial {
       point_c: Vec2::new(100.0, -120.0),
       point_d: Vec2::new(160.0, -120.0),
       color:   ThemeColor::Text.color(),
-      width:   4.0,
+      width:   2.0,
     }
   }
 }
@@ -39,9 +39,9 @@ impl Material2d for CurveMaterial {
   fn fragment_shader() -> ShaderRef {
     "shaders/curve_material.wgsl".into()
   }
-  // fn vertex_shader() -> ShaderRef {
-  //   "shaders/curve_material.wgsl".into()
-  // }
+  fn vertex_shader() -> ShaderRef {
+    "shaders/curve_material.wgsl".into()
+  }
 }
 
 pub struct CurveMaterialPlugin;
