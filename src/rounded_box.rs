@@ -4,10 +4,10 @@ use bevy::{
   sprite::{Material2d, Material2dPlugin},
 };
 
-use crate::style::ThemeColor;
+use crate::{style::ThemeColor, NODE_HEIGHT, NODE_WIDTH};
 
 #[derive(AsBindGroup, Debug, Clone, Asset, Reflect)]
-pub struct BoxMaterial {
+pub struct RoundedBoxMaterial {
   #[uniform(0)]
   pub color:        Color,
   #[uniform(0)]
@@ -20,11 +20,11 @@ pub struct BoxMaterial {
   pub radius:       f32,
 }
 
-impl Default for BoxMaterial {
+impl Default for RoundedBoxMaterial {
   fn default() -> Self {
     Self {
       color:        ThemeColor::Foreground.color(),
-      size:         Vec2::new(320.0, 240.0),
+      size:         Vec2::new(NODE_WIDTH, NODE_HEIGHT),
       border_width: 1.0,
       border_color: ThemeColor::Outline.color(),
       radius:       16.0,
@@ -32,7 +32,7 @@ impl Default for BoxMaterial {
   }
 }
 
-impl Material2d for BoxMaterial {
+impl Material2d for RoundedBoxMaterial {
   fn fragment_shader() -> ShaderRef {
     "shaders/box_material.wgsl".into()
   }
@@ -41,12 +41,12 @@ impl Material2d for BoxMaterial {
   }
 }
 
-pub struct BoxMaterialPlugin;
+pub struct RoundedBoxPlugin;
 
-impl Plugin for BoxMaterialPlugin {
+impl Plugin for RoundedBoxPlugin {
   fn build(&self, app: &mut App) {
     app
-      .add_plugins(Material2dPlugin::<BoxMaterial>::default())
-      .register_asset_reflect::<BoxMaterial>();
+      .add_plugins(Material2dPlugin::<RoundedBoxMaterial>::default())
+      .register_asset_reflect::<RoundedBoxMaterial>();
   }
 }

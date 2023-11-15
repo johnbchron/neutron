@@ -29,7 +29,7 @@ impl Default for CurveMaterial {
       point_b: Vec2::new(-100.0, 120.0),
       point_c: Vec2::new(100.0, -120.0),
       point_d: Vec2::new(160.0, -120.0),
-      color:   ThemeColor::Text.color(),
+      color:   ThemeColor::Outline.color(),
       width:   2.0,
     }
   }

@@ -19,6 +19,7 @@ struct VertexOutput {
   @location(0) world_position: vec4<f32>,
   @location(1) world_normal: vec3<f32>,
   @location(2) uv: vec2<f32>,
+  @location(3) vertex_position: vec3<f32>,
 }
 
 struct CurveMaterial {
@@ -50,12 +51,13 @@ fn vertex(
     vec3(aabb_max.x, aabb_min.y, in.position.z),
   );
   let vertex_position = aabb_vertices[in.vertex_index];
+  out.vertex_position = vertex_position;
 
-  // out.world_position = mesh_functions::mesh2d_position_local_to_world(
-  //   model,
-  //   vec4<f32>(vertex_position, 1.0)
-  // );
-  out.world_position = vec4(vertex_position, 1.0);
+  out.world_position = mesh_functions::mesh2d_position_local_to_world(
+    model,
+    vec4<f32>(vertex_position, 1.0)
+  );
+  // out.world_position = vec4(vertex_position, 1.0);
   out.position = mesh_functions::mesh2d_position_world_to_clip(out.world_position);
   out.world_normal = mesh_functions::mesh2d_normal_local_to_world(in.normal, in.instance_index);
 
@@ -66,7 +68,7 @@ fn vertex(
 fn fragment(
   in: VertexOutput,
 ) -> @location(0) vec4<f32> {
-  let p = in.world_position.xy;
+  let p = in.vertex_position.xy;
   var distance: f32 = cubic_bezier_sdf(
     material.point_a,
     material.point_b,
