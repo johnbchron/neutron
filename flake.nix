@@ -1,68 +1,43 @@
 {
   inputs = {
-    flake-utils.url = "github:numtide/flake-utils";
-    naersk.url = "github:nix-community/naersk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    wgsl-analyzer.url = "github:wgsl-analyzer/wgsl-analyzer";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay, wgsl-analyzer }:
+  outputs = inputs @ { nixpkgs, rust-overlay, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
-        pkgs = (import nixpkgs) {
+        pkgs = import nixpkgs {
           inherit system overlays;
         };
-        
-        toolchain = (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml).override {
-          extensions = [ "rust-analyzer" "rust-src" ];
-        };
-        
-        rust_deps = [ toolchain pkgs.lldb pkgs.bacon ];
-        wgsl_deps = [ wgsl-analyzer.packages.${system}.default ];
-        bevy_build_deps = with pkgs; [
-          pkg-config
-          mold clang
-          makeWrapper
+
+        toolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+          extensions = [ "rust-src" "rust-analyzer" ];
+        });
+
+        nativeBuildInputs = with pkgs; [
+          toolchain pkg-config clang
+          alsa-lib udev
+
+          libxkbcommon wayland
+          xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr
+ 
+          vulkan-headers vulkan-loader
+          vulkan-tools vulkan-tools-lunarg
+          vulkan-extension-layer
+          vulkan-validation-layers
         ];
-        bevy_runtime_deps = with pkgs; [
-          # udev alsa-lib vulkan-loader pipewire.lib # bevy deps
-          # xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr # To use the x11 feature
-          # libxkbcommon wayland # To use the wayland feature
-          rustPlatform.bindgenHook darwin.apple_sdk.frameworks.Cocoa
-        ];
+        buildInputs = [];
+
       in {
-        defaultPackage = let 
-          naersk' = pkgs.callPackage naersk {
-            cargo = toolchain;
-            rustc = toolchain;
-          };
-        in naersk'.buildPackage rec {
-          pname = "mage_corp";
-          src = ./.;
-
-          nativeBuildInputs = bevy_build_deps;
-          buildInputs = bevy_runtime_deps;
-          
-          overrideMain = attrs: {
-            fixupPhase = ''
-              wrapProgram $out/bin/${pname} \
-                --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath bevy_runtime_deps} \
-                # --prefix XCURSOR_THEME : "Adwaita" \
-                # --prefix ALSA_PLUGIN_DIR : ${"pkgs.pipewire.lib"}/lib/alsa-lib
-              mkdir -p $out/bin/assets
-              cp -a crates/mage_corp/assets $out/bin
-            '';
-          };
-        };
-
-        # For `nix develop`:
-        devShells.default = pkgs.mkShell rec {
-          nativeBuildInputs = bevy_build_deps ++ bevy_runtime_deps ++ rust_deps;
+        devShell = pkgs.mkShell {
+          inherit buildInputs nativeBuildInputs;
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath nativeBuildInputs;
-          LIBCLANG_PATH = "${pkgs.libclang}/lib";
         };
       }
-    );
+  );
 }
