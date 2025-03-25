@@ -1,43 +1,29 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    devshell.url = "github:numtide/devshell";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = inputs @ { nixpkgs, rust-overlay, flake-utils, ... }:
+  outputs = { nixpkgs, devshell, rust-overlay, flake-utils, ... }: 
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
-          inherit system overlays;
+          inherit system;
+          overlays = [ (import rust-overlay) devshell.overlays.default ];
         };
 
         toolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
-          extensions = [ "rust-src" "rust-analyzer" ];
+          extensions = [ "rust-src" "rust-analyzer" "rustc-codegen-cranelift-preview" ];
         });
 
-        nativeBuildInputs = with pkgs; [
-          toolchain pkg-config clang
-          alsa-lib udev
-
-          libxkbcommon wayland
-          xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr
- 
-          vulkan-headers vulkan-loader
-          vulkan-tools vulkan-tools-lunarg
-          vulkan-extension-layer
-          vulkan-validation-layers
+        deps = with pkgs; [
+          toolchain pkg-config clang lld
         ];
-        buildInputs = [];
-
       in {
-        devShell = pkgs.mkShell {
-          inherit buildInputs nativeBuildInputs;
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath nativeBuildInputs;
+        devShell = pkgs.devshell.mkShell {
+          packages = deps;
+          motd = "\n  Welcome to the {2}neutron{reset} shell.\n";
         };
-      }
-  );
+      });
 }
