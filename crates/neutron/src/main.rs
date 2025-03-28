@@ -39,10 +39,21 @@ async fn main() -> Result<(), ()> {
   let (commands, command_rx) = mpsc::channel(100);
 
   tokio::select! {
-    _ = tokio::spawn(draw_task(state.clone())) => {},
-    _ = tokio::spawn(command_runner(state.clone(), command_rx)) => {},
-    _ = tokio::spawn(event_handler(commands.clone())) => {},
-    _ = tokio::spawn(shutdown_task(state.clone())) => {},
+    res = tokio::spawn(draw_task(state.clone())) => {
+      ratatui::restore();
+      println!("draw_task task exited: {res:?}");
+    },
+    res = tokio::spawn(command_runner(state.clone(), command_rx)) => {
+      ratatui::restore();
+      println!("command_runner task exited: {res:?}");
+    },
+    res = tokio::spawn(event_handler(commands.clone())) => {
+      ratatui::restore();
+      println!("event_handler task exited: {res:?}");
+    },
+    _ = tokio::spawn(shutdown_task(state.clone())) => {
+      ratatui::restore();
+    },
   };
 
   ratatui::restore();
