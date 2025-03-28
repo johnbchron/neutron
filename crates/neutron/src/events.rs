@@ -10,12 +10,20 @@ pub async fn event_handler(commands: mpsc::Sender<Command>) {
   loop {
     if let Some(Ok(event)) = event_stream.next().await {
       let _ = match event {
-        Event::Key(KeyEvent {
-          code: KeyCode::Char('q') | KeyCode::Esc,
-          modifiers: KeyModifiers::NONE,
-          kind: KeyEventKind::Press,
-          ..
-        }) => commands.send(Command::Exit).await,
+        Event::Key(
+          KeyEvent {
+            code: KeyCode::Char('q') | KeyCode::Esc,
+            modifiers: KeyModifiers::NONE,
+            kind: KeyEventKind::Press,
+            ..
+          }
+          | KeyEvent {
+            code: KeyCode::Char('c'),
+            modifiers: KeyModifiers::CONTROL,
+            kind: KeyEventKind::Press,
+            ..
+          },
+        ) => commands.send(Command::Exit).await,
         Event::Key(KeyEvent {
           code: KeyCode::Char(' '),
           modifiers: KeyModifiers::NONE,
