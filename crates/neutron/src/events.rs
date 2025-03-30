@@ -24,12 +24,6 @@ pub async fn event_handler(commands: mpsc::Sender<Command>) {
             ..
           },
         ) => commands.send(Command::Exit).await,
-        Event::Key(KeyEvent {
-          code: KeyCode::Char(' '),
-          modifiers: KeyModifiers::NONE,
-          kind: KeyEventKind::Press,
-          ..
-        }) => commands.send(Command::IncrementCounter(1)).await,
         _ => Ok(()),
       };
     }

@@ -1,18 +1,13 @@
-use std::sync::Arc;
+mod hello_world_screen;
+mod item_list;
 
-use ratatui::{
-  Frame,
-  style::Stylize,
-  text::{Line, Text},
-  widgets::{Block, Paragraph},
-};
+use std::{ops::Deref, sync::Arc};
+
+use ratatui::{prelude::*, widgets::Block};
 use tokio::{sync::Mutex, time::interval};
 
-use crate::{
-  FRAME_DURATION,
-  app_state::AppState,
-  colors::{BACKGROUND_COLOR_RATATUI, NORMAL_TEXT_COLOR_RATATUI},
-};
+use self::item_list::ItemListWidget;
+use crate::{FRAME_DURATION, app_state::AppState, colors::*};
 
 pub async fn draw_task(state: Arc<Mutex<AppState>>) {
   let mut terminal = ratatui::init();
@@ -21,28 +16,24 @@ pub async fn draw_task(state: Arc<Mutex<AppState>>) {
   loop {
     interval.tick().await;
 
-    let state_snapshot = {
-      let state = state.lock().await;
-      AppState::clone(&state)
-    };
-
-    terminal
-      .draw(draw(state_snapshot))
-      .expect("failed to draw frame");
+    let state = state.lock().await;
+    terminal.draw(draw(state)).expect("failed to draw frame");
   }
 }
 
-fn draw(state: AppState) -> impl FnOnce(&mut Frame) {
+fn draw(state: impl Deref<Target = AppState>) -> impl FnOnce(&mut Frame) {
   move |frame: &mut Frame| {
-    let block = Block::new()
-      .fg(NORMAL_TEXT_COLOR_RATATUI)
-      .bg(BACKGROUND_COLOR_RATATUI);
-    let par = Paragraph::new(Text::from(vec![
-      Line::from("Hello World!"),
-      Line::from(format!("Counter: {}", state.counter)),
-    ]))
-    .block(block);
+    let bg_block = Block::new().style(
+      Style::new()
+        .fg(NORMAL_TEXT_COLOR_RATATUI)
+        .bg(BACKGROUND_COLOR_RATATUI),
+    );
+    frame.render_widget(bg_block, frame.area());
 
-    frame.render_widget(par, frame.area());
+    let item_list = ItemListWidget {
+      item_store: &state.items,
+    };
+
+    frame.render_widget(item_list, frame.area());
   }
 }
