@@ -6,6 +6,7 @@ use crate::app_state::AppState;
 
 pub enum Command {
   Exit,
+  SelectNavigateDown,
 }
 
 pub async fn command_runner(
@@ -20,6 +21,7 @@ pub async fn command_runner(
     let mut lock = state.lock().await;
     match command {
       Command::Exit => lock.shutdown = true,
+      Command::SelectNavigateDown => todo!(),
     }
   }
 }

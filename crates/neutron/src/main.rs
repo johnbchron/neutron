@@ -37,11 +37,11 @@ async fn main() -> Result<(), ()> {
       ratatui::restore();
       println!("command_runner task exited: {res:?}");
     },
-    res = spawn(event_handler(commands.clone())) => {
+    res = spawn(event_handler(state.clone(), commands)) => {
       ratatui::restore();
       println!("event_handler task exited: {res:?}");
     },
-    _ = spawn(shutdown_task(state.clone())) => {
+    _ = spawn(shutdown_task(state)) => {
       ratatui::restore();
     },
   };

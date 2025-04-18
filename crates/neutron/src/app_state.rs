@@ -1,43 +1,32 @@
+mod test_data;
+
 use std::collections::{HashMap, hash_map::Entry};
 
-use item::{Dependency, Determinator, Item, ItemData, ItemId};
+use item::*;
+
+pub enum Screen {
+  ItemList(ItemListState),
+  ItemGraph(ItemGraphState),
+}
+
+pub struct ItemListState {
+  pub selected: Option<ItemId>,
+}
+
+pub struct ItemGraphState {}
 
 pub struct AppState {
   pub shutdown: bool,
   pub items:    ItemStore,
+  pub screen:   Screen,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for AppState {
   fn default() -> Self {
-    let mut items = ItemStore::new();
-    let first_item = items
-      .add_item(Item::new(
-        ItemData {
-          content:     "This Is A Test Item".to_string(),
-          description: Some(
-            "I created this item as a test of the item list view.".to_string(),
-          ),
-        },
-        Determinator::Dependency(Dependency::All(Vec::new())),
-      ))
-      .unwrap();
-    items
-      .add_item(Item::new(
-        ItemData {
-          content:     "I'm a Second Test Item".to_owned(),
-          description: Some(
-            "I depend on the first item, so that we can test dependencies."
-              .to_owned(),
-          ),
-        },
-        Determinator::Dependency(Dependency::All(vec![first_item])),
-      ))
-      .unwrap();
-
     AppState {
       shutdown: false,
-      items,
+      items:    self::test_data::test_items(),
+      screen:   Screen::ItemList(ItemListState { selected: None }),
     }
   }
 }

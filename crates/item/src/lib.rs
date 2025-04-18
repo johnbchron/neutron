@@ -31,34 +31,49 @@ impl Default for ItemId {
 }
 
 pub struct Item {
-  id:           ItemId,
-  data:         ItemData,
-  determinator: Determinator,
+  id:   ItemId,
+  meta: ItemMetadata,
+  data: ItemType,
 }
 
 impl Item {
-  pub fn new(data: ItemData, determinator: Determinator) -> Self {
+  pub fn new(meta: ItemMetadata, data: ItemType) -> Self {
     Item {
       id: ItemId::new(),
+      meta,
       data,
-      determinator,
     }
   }
 
   pub fn id(&self) -> ItemId { self.id }
-  pub fn data(&self) -> &ItemData { &self.data }
-  pub fn determinator(&self) -> &Determinator { &self.determinator }
+  pub fn meta(&self) -> &ItemMetadata { &self.meta }
+  pub fn data(&self) -> &ItemType { &self.data }
 }
 
-pub struct ItemData {
+pub struct ItemMetadata {
   pub content:     String,
   pub description: Option<String>,
 }
 
-pub enum Determinator {
-  Dependency(Dependency),
+pub enum ItemType {
+  Condition(Condition),
+  Task(Task),
 }
 
-pub enum Dependency {
-  All(Vec<ItemId>),
+pub enum Condition {
+  Atomic { satisfied: bool },
+  Compound,
+}
+
+pub struct Task {
+  pub completed:  bool,
+  pub dependence: Dependence,
+}
+
+pub enum Dependence {
+  None,
+  Single(ItemId),
+  All(Vec<Dependence>),
+  Any(Vec<Dependence>),
+  Not(Box<Dependence>),
 }

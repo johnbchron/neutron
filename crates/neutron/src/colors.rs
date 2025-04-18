@@ -1,5 +1,5 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
+#![expect(dead_code)]
+#![expect(unused_imports)]
 
 use radix_colors_rs::*;
 

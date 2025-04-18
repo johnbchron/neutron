@@ -1,4 +1,5 @@
 mod hello_world_screen;
+mod item_graph;
 mod item_list;
 
 use std::{ops::Deref, sync::Arc};
@@ -30,10 +31,16 @@ fn draw(state: impl Deref<Target = AppState>) -> impl FnOnce(&mut Frame) {
     );
     frame.render_widget(bg_block, frame.area());
 
-    let item_list = ItemListWidget {
-      item_store: &state.items,
-    };
+    match &state.screen {
+      crate::app_state::Screen::ItemList(item_list_state) => {
+        let widget = ItemListWidget {
+          item_store: &state.items,
+          state:      item_list_state,
+        };
 
-    frame.render_widget(item_list, frame.area());
+        frame.render_widget(widget, frame.area());
+      }
+      crate::app_state::Screen::ItemGraph(item_graph_state) => todo!(),
+    }
   }
 }
