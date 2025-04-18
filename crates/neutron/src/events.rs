@@ -9,7 +9,7 @@ use tokio::sync::{
 
 use crate::{
   app_state::{AppState, Screen},
-  commands::Command,
+  commands::{Command, SelectNavigateCommand},
 };
 
 type Commands = mpsc::Sender<Command>;
@@ -48,6 +48,12 @@ async fn detect_exit(event: &Event, commands: Commands) -> CommandsResult {
     modifiers: KeyModifiers::CONTROL,
     kind: KeyEventKind::Press,
     ..
+  })
+  | Event::Key(KeyEvent {
+    code: KeyCode::Char('q'),
+    modifiers: KeyModifiers::NONE,
+    kind: KeyEventKind::Press,
+    ..
   }) = &event
   {
     commands.send(Command::Exit).await?;
@@ -67,7 +73,29 @@ async fn detect_navigate_selection(
       kind: KeyEventKind::Press | KeyEventKind::Repeat,
       ..
     }) => {
-      commands.send(Command::SelectNavigateDown).await?;
+      commands
+        .send(Command::SelectNavigate(SelectNavigateCommand::Down))
+        .await?;
+    }
+    Event::Key(KeyEvent {
+      code: KeyCode::Up,
+      modifiers: KeyModifiers::NONE,
+      kind: KeyEventKind::Press | KeyEventKind::Repeat,
+      ..
+    }) => {
+      commands
+        .send(Command::SelectNavigate(SelectNavigateCommand::Up))
+        .await?;
+    }
+    Event::Key(KeyEvent {
+      code: KeyCode::Esc,
+      modifiers: KeyModifiers::NONE,
+      kind: KeyEventKind::Press,
+      ..
+    }) => {
+      commands
+        .send(Command::SelectNavigate(SelectNavigateCommand::Escape))
+        .await?;
     }
     _ => (),
   }

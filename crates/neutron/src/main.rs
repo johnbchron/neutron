@@ -1,3 +1,5 @@
+#![feature(btree_entry_insert)]
+
 mod app_state;
 mod colors;
 mod commands;

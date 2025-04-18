@@ -2,7 +2,7 @@ use std::{fmt, time::SystemTime};
 
 use nanorand::Rng;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ItemId(ulid::Ulid);
 
 impl fmt::Debug for ItemId {

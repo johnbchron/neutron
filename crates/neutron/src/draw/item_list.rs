@@ -12,16 +12,17 @@ use crate::{
 };
 
 fn item_line<'i>(item: &'i Item, state: &ItemListState) -> Line<'i> {
-  let mut bold_style = Style::new().bold();
-  let mut dim_style = Style::new().fg(DIM_TEXT_COLOR_RATATUI);
-
-  match state.selected {
-    Some(selected_item) if selected_item == item.id() => {
-      bold_style = bold_style.underlined();
-      dim_style = dim_style.underlined();
-    }
-    _ => (),
-  }
+  let selected = matches!(state.selected, Some(si) if si == item.id());
+  let bold_style = if selected {
+    Style::new()
+      .bold()
+      .fg(PUNCHY_TEXT_COLOR_RATATUI)
+      .underlined()
+      .underline_color(PUNCHY_TEXT_COLOR_RATATUI)
+  } else {
+    Style::new().bold()
+  };
+  let dim_style = Style::new().fg(DIM_TEXT_COLOR_RATATUI);
 
   Line::from_iter(
     [
@@ -50,7 +51,7 @@ impl Widget for ItemListWidget<'_> {
     let Self { item_store, state } = self;
 
     let lines = item_store
-      .item_iter()
+      .item_iter(&state.sort_order)
       .into_iter()
       .map(|i| item_line(i, state));
 
